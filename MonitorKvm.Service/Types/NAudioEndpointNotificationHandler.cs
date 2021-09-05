@@ -2,10 +2,12 @@
 using NAudio.CoreAudioApi;
 using NAudio.CoreAudioApi.Interfaces;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace MonitorKvm.Service.Types
 {
@@ -40,6 +42,12 @@ namespace MonitorKvm.Service.Types
 		public static extern void mouse_event(Int32 dwFlags, Int32 dx, Int32 dy, Int32 dwData, UIntPtr dwExtraInfo);
 		private const int MOUSEEVENTF_MOVE = 0x0001;
 
+		const UInt32 WM_KEYDOWN = 0x0100;
+		const int VK_F5 = 0x7E;
+
+		[DllImport("user32.dll")]
+		static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+
 		public void OnDefaultDeviceChanged(DataFlow flow, Role role, String defaultDeviceId)
 		{
 
@@ -65,16 +73,42 @@ namespace MonitorKvm.Service.Types
 				{
 					this._Logger.LogInformation("Sleeping monitors...");
 					//thread dies for some reason, run in new task
-					new Task(() => { SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2)); }).Start();
+					new Task(() =>
+					{
+						SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2));
+					}).Start();
+
+					Thread.Sleep(5000);
+					this._F15CTS = new CancellationTokenSource();
+					new Task(this.DoF15).Start();
 				}
 				else
                 {
-					this._Logger.LogInformation("Waking monitors...");
-					Thread.Sleep(1500);
-					mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
+					this._F15CTS.Cancel();
 				}
 			}
 		}
+
+		private CancellationTokenSource _F15CTS;
+		private void DoF15()
+        {
+			Process[] processes = Process.GetProcessesByName("explorer");
+
+			while (!this._F15CTS.IsCancellationRequested)
+            {
+				foreach (var proc in processes)
+				{
+					PostMessage(proc.MainWindowHandle, WM_KEYDOWN, VK_F5, 0);
+				}
+
+				Thread.Sleep(1000);
+            }
+
+			this._Logger.LogInformation("Waking monitors...");
+			Thread.Sleep(1500);
+			mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
+		}
+
 
 		public void OnPropertyValueChanged(String pwstrDeviceId, PropertyKey key)
 		{
