@@ -16,6 +16,9 @@
 # Mono auto generated files
 mono_crash.*
 
+# test install of service
+Service/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
