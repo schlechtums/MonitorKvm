@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MonitorKvm.Service.Types;
+using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace MonitorKvm.Service
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var title = $"Monitor KVM version {version?.Major}.{version?.Minor}.{version?.Build}";
+            
+            Console.Title = title;
             logger.LogInformation(title);
 
             new NAudioEndpointNotificationHandler(logger);
