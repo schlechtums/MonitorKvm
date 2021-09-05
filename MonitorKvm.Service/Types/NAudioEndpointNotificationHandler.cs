@@ -4,6 +4,7 @@ using NAudio.CoreAudioApi.Interfaces;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace MonitorKvm.Service.Types
 {
@@ -34,6 +35,10 @@ namespace MonitorKvm.Service.Types
 		[DllImport("user32.dll")]
 		public static extern int SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
 
+		[DllImport("user32.dll")]
+		public static extern void mouse_event(Int32 dwFlags, Int32 dx, Int32 dy, Int32 dwData, UIntPtr dwExtraInfo);
+		private const int MOUSEEVENTF_MOVE = 0x0001;
+
 		public void OnDefaultDeviceChanged(DataFlow flow, Role role, String defaultDeviceId)
 		{
 
@@ -58,7 +63,13 @@ namespace MonitorKvm.Service.Types
 				if (newState == DeviceState.NotPresent)
 				{
 					this._Logger.LogInformation("Sleeping monitors...");
-					SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2));
+					//thread dies for some reason, run in new task
+					new Task(() => { SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2)); }).Start();
+				}
+				else
+                {
+					this._Logger.LogInformation("Waking monitors...");
+					mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
 				}
 			}
 		}
