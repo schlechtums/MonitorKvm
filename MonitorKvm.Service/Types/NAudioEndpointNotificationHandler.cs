@@ -24,7 +24,7 @@ namespace MonitorKvm.Service.Types
 			de.RegisterEndpointNotificationCallback(this);
 
 			var headsetSpeakerDevice = de.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.All)
-											 .Single(aep => aep.DeviceFriendlyName == triggerDeviceFriendlyName);
+											 .Single(aep => aep.DeviceFriendlyName.Contains(triggerDeviceFriendlyName));
 
 			this._TriggerDeviceId = headsetSpeakerDevice.ID;
 		}
