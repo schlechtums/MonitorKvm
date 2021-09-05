@@ -17,7 +17,7 @@ namespace MonitorKvm.Service
             _logger = logger;
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            var title = $"Monitor KVM version {version?.Major}.{version?.Minor}.{version?.Build}";
+            var title = $"Monitor KVM {version?.Major}.{version?.Minor}.{version?.Build}";
             
             Console.Title = title;
             logger.LogInformation(title);
