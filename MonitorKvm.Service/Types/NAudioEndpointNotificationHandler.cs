@@ -4,6 +4,7 @@ using NAudio.CoreAudioApi.Interfaces;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MonitorKvm.Service.Types
@@ -69,6 +70,7 @@ namespace MonitorKvm.Service.Types
 				else
                 {
 					this._Logger.LogInformation("Waking monitors...");
+					Thread.Sleep(1500);
 					mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
 				}
 			}
