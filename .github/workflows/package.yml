@@ -1,8 +1,6 @@
 name: Create Package
 
-on:
-  push:
-    branches: [ master ]
+on: push
 
 jobs:
   Publish-Package:
