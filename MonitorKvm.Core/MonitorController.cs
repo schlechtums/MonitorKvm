@@ -18,7 +18,7 @@ namespace MonitorKvm.Core
         {
             new Task(() =>
             {
-                Thread.Sleep(1500);
+                Thread.Sleep(5000);
                 SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2));
             }).Start();
         }
