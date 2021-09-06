@@ -37,23 +37,43 @@ jobs:
       - name: Build Solution osx-x64
         run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
 
+  Create-win-x64-Zip:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    name: Create win-x64 Asset
+    needs: Build-Packages
+    outputs:
+      tag: ${{ needs.Build-Packages.outputs.tag }}    
+    steps:
       - name: Create Zip win-x64
-        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ steps.tag.outputs.tag }}.zip"
+        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Build-Packages.outputs.tag }}.zip"
 
+  Create-linux-x64-Zip:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    name: Create linux-x64 Asset
+    needs: Build-Packages
+    steps:
       - name: Create Zip linux-x64
-        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ steps.tag.outputs.tag }}.zip"
+        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ needs.Build-Packages.outputs.tag }}.zip"
 
+  Create-osx-x64-Zip:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    name: Create osx-x64 Asset
+    needs: Build-Packages
+    steps:
       - name: Create Zip osx-x64
-        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ steps.tag.outputs.tag }}.zip"
+        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ needs.Build-Packages.outputs.tag }}.zip"
 
   Create-Release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Create Release
-    needs: Build-Packages
+    needs: [ Create-win-x64-Zip, Create-linux-x64-Zip, Create-osx-x64-Zip ]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-      tag: ${{ needs.Build-Packages.outputs.tag }}
+      tag: ${{ needs.Create-win-x64-Zip.outputs.tag }}
     steps:
       - name: Create Release
         id: create_release
@@ -62,7 +82,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.Build-Packages.outputs.tag }}
-          release_name: ${{ env.PACKAGE_NAME_PREFIX }}_${{ needs.Build-Packages.outputs.tag }}
+          release_name: ${{ env.PACKAGE_NAME_PREFIX }}_${{ needs.Create-win-x64-Zip.outputs.tag }}
           draft: false
           prerelease: false
 
