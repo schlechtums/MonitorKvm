@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace MonitorKvm.Service
@@ -15,7 +16,10 @@ namespace MonitorKvm.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<Worker>();
+                    services.AddHostedService<Worker>(serviceProvider =>
+                    {
+                        return new Worker(serviceProvider.GetService<ILogger<Worker>>(), args);
+                    });
                 });
     }
 }

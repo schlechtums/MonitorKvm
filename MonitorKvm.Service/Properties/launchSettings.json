@@ -1,7 +1,8 @@
-﻿{
+{
   "profiles": {
     "MonitorKvm.Service": {
       "commandName": "Project",
+      "commandLineArgs": "\"Logitech BRIO\"",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }
