@@ -38,7 +38,6 @@ namespace MonitorKvm.Service
             while (!stoppingToken.IsCancellationRequested)
             {
                 await Task.Delay(1000, stoppingToken);
-                this._Logger.LogInformation("Polling for change...");
                 this._Listener.PollForChange();
             }
         }

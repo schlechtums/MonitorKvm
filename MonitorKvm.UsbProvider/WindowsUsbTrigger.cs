@@ -15,28 +15,49 @@ namespace MonitorKvm.UsbProvider
         protected override List<String> GetUsbDeviceNames()
         {
 			return this.GetUsbDevices()
-					   .Select(d => ((PropertyData)d.Properties["Name"]).Value.ToString())
+					   .Select(this.GetUsbDeviceName)
 					   .ToList();
         }
 
+		private String GetUsbDeviceName(ManagementBaseObject d)
+		{
+			return ((PropertyData)d.Properties["Name"]).Value.ToString();
+		}
+
+		private String _TriggerDeviceAddress;
+
         private List<ManagementBaseObject> GetUsbDevices()
 		{
-			var usbDeviceAddresses = this.LookUpUsbDeviceAddresses();
-
-			var usbDevices = new List<ManagementBaseObject>();
-
-			foreach (var a in usbDeviceAddresses)
+			if (this._TriggerDeviceAddress == null)
 			{
-				// query MI for the PNP device info
-				// address must be escaped to be used in the query; luckily, the form we extracted previously is already escaped
-				var curMoc = this.QueryMi("Select * from Win32_PnPEntity where PNPDeviceID = " + a);
-				foreach (var device in curMoc)
-				{
-					usbDevices.Add(device);
-				}
-			}
+				var usbDeviceAddresses = this.LookUpUsbDeviceAddresses();
 
-			return usbDevices;
+				foreach (var a in usbDeviceAddresses)
+				{
+					// query MI for the PNP device info
+					// address must be escaped to be used in the query; luckily, the form we extracted previously is already escaped
+					var devices = this.GetUsbDevicesFromAddress(a);
+					foreach (var d in devices)
+					{
+						if (this.GetUsbDeviceName(d) == this.TriggerDeviceName)
+						{
+							this._TriggerDeviceAddress = a;
+							return devices;
+						}
+					}
+				}
+
+				return new List<ManagementBaseObject>();
+			}
+			else
+			{
+				return this.GetUsbDevicesFromAddress(this._TriggerDeviceAddress);
+			}
+		}
+
+		private List<ManagementBaseObject> GetUsbDevicesFromAddress(String deviceAddress)
+        {
+			return this.QueryMi("Select * from Win32_PnPEntity where PNPDeviceID = " + deviceAddress).OfType<ManagementBaseObject>().ToList();
 		}
 
 		private List<String> LookUpUsbDeviceAddresses()
