@@ -16,16 +16,16 @@ namespace MonitorKvm.Core
 
         public static void TurnMonitorsOff()
         {
-            new Task(() =>
-            {
-                Thread.Sleep(5000);
-                SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2));
-            }).Start();
+            new Task(() => { SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2)); }).Start();
         }
 
         public static void TurnMonitorsOn()
         {
-            new Task(() => { mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero); }).Start();
+            new Task(() =>
+            {
+                Thread.Sleep(1500);
+                mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
+            }).Start();
         }
     }
 }
