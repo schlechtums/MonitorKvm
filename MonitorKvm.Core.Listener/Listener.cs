@@ -11,6 +11,7 @@ namespace MonitorKvm.Core.Listener
             this._Logger = logger;
 
             this._KvmTrigger = UsbTriggerBase.GetUsbTriggerForOS(this._Logger, usbTriggerDeviceName);
+            this._KvmTrigger.PollForChange();
             this._KvmTrigger.OnSleepMonitors += this.HandleSleepMonitors;
             this._KvmTrigger.OnWakeMonitors += this.HandleWakeMonitors;
         }

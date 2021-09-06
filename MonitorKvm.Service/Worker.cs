@@ -32,8 +32,9 @@ namespace MonitorKvm.Service
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            this._Logger.LogInformation($"Starting USB listener for USB device: '{this._Args[0]}'");
             this._Listener = new Listener(this._Logger, this._Args[0]);
-            this._Logger.LogInformation($"Running usb listener for usb device: '{this._Args[0]}'");
+            this._Logger.LogInformation($"Running USB listener for USB device: '{this._Args[0]}'");
 
             while (!stoppingToken.IsCancellationRequested)
             {

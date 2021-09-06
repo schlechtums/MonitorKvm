@@ -4,10 +4,6 @@ namespace MonitorKvm.Core
 {
     public abstract class MonitorKvmTriggerBase
     {
-        public MonitorKvmTriggerBase()
-        {
-        }
-
         protected abstract Boolean ShouldBeActive(out String message);
 
         private Boolean? _Active;
