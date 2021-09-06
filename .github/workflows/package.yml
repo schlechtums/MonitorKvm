@@ -3,7 +3,7 @@ name: Create Package
 on: push
 
 env:
-  SOLUTION_PATH: MonitorKvm.sln
+  SOLUTION_PATH: MonitorKvm.Service\MonitorKvm.Service.csproj
   PACKAGE_NAME_PREFIX: MonitorKVM
   PACKAGE_OUTPUT_FOLDER: package
 
