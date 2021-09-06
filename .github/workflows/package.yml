@@ -31,13 +31,13 @@ jobs:
         run: nuget restore ${{ env.SOLUTION_PATH }}
         
       - name: Build Solution win-x64
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER\win-x64 }} -r win-x64
+        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
 
       - name: Build Solution linux-x64
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER\linux-x64 }} -r linux-x64
+        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64 -r linux-x64
 
       - name: Build Solution osx-x64
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER\osx-x64 }} -r osx-x64
+        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
 
       - name: Create Zip win-x64
         run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ steps.tag.outputs.tag }}.zip"
