@@ -70,6 +70,15 @@ jobs:
     name: Build Linux-x64 Package
     needs: Create-Release
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core @ Latest
+        uses: actions/setup-dotnet@v1
+
+      - name: Nuget Restore
+        run: nuget restore ${{ env.SOLUTION_PATH }}
+
       - name: Build Solution
         run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64 -r linux-x64
 
@@ -95,6 +104,15 @@ jobs:
     name: Build osx-x64 Package
     needs: Create-Release
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core @ Latest
+        uses: actions/setup-dotnet@v1
+
+      - name: Nuget Restore
+        run: nuget restore ${{ env.SOLUTION_PATH }}
+        
       - name: Build Solution
         run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
 
