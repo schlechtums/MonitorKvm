@@ -9,6 +9,7 @@ namespace MonitorKvm.Service
     {
         public static void Main(String[] args)
         {
+            Environment.SetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
             Program.CreateHostBuilder(args).Build().Run();
         }
 
