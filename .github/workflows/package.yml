@@ -8,12 +8,34 @@ env:
   PACKAGE_OUTPUT_FOLDER: package
 
 jobs:
-  Build-Packages:
+  Create-Release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
-    name: Build Packages
+    name: Create Release
     outputs:
-      tag: ${{ steps.tag.outputs.tag }} 
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          release_name: ${{ env.PACKAGE_NAME_PREFIX }}_${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: false
+
+  Build-Win-x64-Package:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    name: Build Win-x64 Package
+    needs: Create-Release    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -21,78 +43,16 @@ jobs:
       - name: Setup .NET Core @ Latest
         uses: actions/setup-dotnet@v1
 
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
-
       - name: Nuget Restore
         run: nuget restore ${{ env.SOLUTION_PATH }}
         
-      - name: Build Solution win-x64
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
+      - name: Build Solution
+        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
 
-      - name: Build Solution linux-x64
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64 -r linux-x64
+      - name: Create Zip
+        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip"
 
-      - name: Build Solution osx-x64
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ steps.tag.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
-
-  Create-win-x64-Zip:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    name: Create win-x64 Asset
-    needs: Build-Packages
-    outputs:
-      tag: ${{ needs.Build-Packages.outputs.tag }}    
-    steps:
-      - name: Create Zip win-x64
-        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Build-Packages.outputs.tag }}.zip"
-
-  Create-linux-x64-Zip:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    name: Create linux-x64 Asset
-    needs: Build-Packages
-    steps:
-      - name: Create Zip linux-x64
-        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ needs.Build-Packages.outputs.tag }}.zip"
-
-  Create-osx-x64-Zip:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    name: Create osx-x64 Asset
-    needs: Build-Packages
-    steps:
-      - name: Create Zip osx-x64
-        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ needs.Build-Packages.outputs.tag }}.zip"
-
-  Create-Release:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    name: Create Release
-    needs: [ Create-win-x64-Zip, Create-linux-x64-Zip, Create-osx-x64-Zip ]
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      tag: ${{ needs.Create-win-x64-Zip.outputs.tag }}
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.Build-Packages.outputs.tag }}
-          release_name: ${{ env.PACKAGE_NAME_PREFIX }}_${{ needs.Create-win-x64-Zip.outputs.tag }}
-          draft: false
-          prerelease: false
-
-  Upload-Win-x64:
-    needs: Create-Release
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    name: Upload win-x64 Asset
-    steps:
-      - name: Upload Release Asset win-x64
+      - name: Upload Release Asset
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
@@ -103,12 +63,19 @@ jobs:
           asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip
           asset_content_type: application/zip
 
-  Upload-Linux-x64:
-    needs: Create-Release
+
+  Build-Linux-x64-Package:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
-    name: Upload linux-x64 Asset
+    name: Build Linux-x64 Package
+    needs: Create-Release
     steps:
+      - name: Build Solution
+        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64 -r linux-x64
+
+      - name: Create Zip
+        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ needs.Create-Release.outputs.tag }}.zip"
+
       - name: Upload Release Asset linux-x64
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
@@ -120,12 +87,20 @@ jobs:
           asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip
           asset_content_type: application/zip
 
-  Upload-OSX-x64:
-    needs: Create-Release
+
+
+  Build-Osx-x64-Package:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
-    name: Upload osx-x64 Asset
+    name: Build osx-x64 Package
+    needs: Create-Release
     steps:
+      - name: Build Solution
+        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
+
+      - name: Create Zip
+        run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ needs.Create-Release.outputs.tag }}.zip"
+
       - name: Upload Release Asset osx-x64
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
