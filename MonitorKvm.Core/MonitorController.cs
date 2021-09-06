@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MonitorKvm.Core
@@ -15,7 +16,11 @@ namespace MonitorKvm.Core
 
         public static void TurnMonitorsOff()
         {
-            new Task(() => { SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2)); }).Start();
+            new Task(() =>
+            {
+                Thread.Sleep(1500);
+                SendMessage(new IntPtr(0xffff), 0x0112, new IntPtr(0xf170), new IntPtr(2));
+            }).Start();
         }
 
         public static void TurnMonitorsOn()
