@@ -11,7 +11,7 @@ jobs:
   Create-Release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
-    name: Create Package
+    name: Create Release
     steps:
       - name: Get tag
         id: tag
@@ -32,6 +32,7 @@ jobs:
           prerelease: false
 
   Build-Packages:
+    needs: Create-Release
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Build Packages
@@ -82,6 +83,7 @@ jobs:
           prerelease: false
 
   Upload-Win-x64:
+    needs: Build-Packages
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Upload win-x64 Asset
@@ -98,6 +100,7 @@ jobs:
           asset_content_type: application/zip
 
   Upload-Linux-x64:
+    needs: Build-Packages
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Upload linux-x64 Asset
@@ -114,6 +117,7 @@ jobs:
           asset_content_type: application/zip
 
   Upload-OSX-x64:
+    needs: Build-Packages
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Upload osx-x64 Asset
