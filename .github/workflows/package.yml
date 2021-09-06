@@ -8,34 +8,12 @@ env:
   PACKAGE_OUTPUT_FOLDER: package
 
 jobs:
-  Create-Release:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    name: Create Release
-    steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
-
-      - name: Output tag
-        run: echo ${{ steps.tag.outputs.tag }}
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          release_name: ${{ env.PACKAGE_NAME_PREFIX }}_${{ steps.tag.outputs.tag }}
-          draft: false
-          prerelease: false
-
   Build-Packages:
-    needs: Create-Release
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Build Packages
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }} 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -46,9 +24,6 @@ jobs:
       - name: Get tag
         id: tag
         uses: dawidd6/action-get-tag@v1
-
-      - name: Output tag
-        run: echo ${{ steps.tag.outputs.tag }}
 
       - name: Nuget Restore
         run: nuget restore ${{ env.SOLUTION_PATH }}
@@ -71,8 +46,28 @@ jobs:
       - name: Create Zip osx-x64
         run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ steps.tag.outputs.tag }}.zip"
 
-  Upload-Win-x64:
+  Create-Release:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    name: Create Release
     needs: Build-Packages
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      tag: ${{ needs.Build-Packages.outputs.tag }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.Build-Packages.outputs.tag }}
+          release_name: ${{ env.PACKAGE_NAME_PREFIX }}_${{ needs.Build-Packages.outputs.tag }}
+          draft: false
+          prerelease: false
+
+  Upload-Win-x64:
+    needs: Create-Release
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Upload win-x64 Asset
@@ -83,13 +78,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ steps.tag.outputs.tag }}.zip
-          asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ steps.tag.outputs.tag }}.zip
+          upload_url: ${{ needs.Create-Release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip
+          asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip
           asset_content_type: application/zip
 
   Upload-Linux-x64:
-    needs: Build-Packages
+    needs: Create-Release
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Upload linux-x64 Asset
@@ -100,13 +95,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ steps.tag.outputs.tag }}.zip
-          asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ steps.tag.outputs.tag }}.zip
+          upload_url: ${{ needs.Create-Release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ needs.Create-Release.outputs.tag }}.zip
+          asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip
           asset_content_type: application/zip
 
   Upload-OSX-x64:
-    needs: Build-Packages
+    needs: Create-Release
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     name: Upload osx-x64 Asset
@@ -117,7 +112,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ steps.tag.outputs.tag }}.zip
-          asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ steps.tag.outputs.tag }}.zip
+          upload_url: ${{ needs.Create-Release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ needs.Create-Release.outputs.tag }}.zip
+          asset_name: ${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip
           asset_content_type: application/zip
