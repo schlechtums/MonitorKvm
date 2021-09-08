@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MonitorKvm.Core.MonitorControllers;
 using MonitorKvm.UsbProvider;
 using System;
 

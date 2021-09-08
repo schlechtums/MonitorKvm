@@ -16,20 +16,26 @@ namespace MonitorKvm.UsbProvider
 
         public static UsbTriggerBase GetUsbTriggerForOS(ILogger logger, String triggerDeviceName)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            var platform = OSPlatformHelper.GetOSPlatform();
+            if (platform == OSPlatform.Windows)
             {
                 logger.LogInformation("Using UsbTriggerBase for Windows");
                 return new WindowsUsbTrigger(triggerDeviceName);
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            else if (platform == OSPlatform.OSX)
             {
                 logger.LogInformation("Using UsbTriggerBase for OSX");
                 throw new Exception($"{OSPlatform.OSX} not supported");
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (platform == OSPlatform.Linux)
             {
                 logger.LogInformation("Using UsbTriggerBase for Linux");
                 throw new Exception($"{OSPlatform.Linux} not supported");
+            }
+            else if (platform == OSPlatform.FreeBSD)
+            {
+                logger.LogInformation("Using UsbTriggerBase for FreeBSD");
+                throw new Exception($"{OSPlatform.FreeBSD} not supported");
             }
             else
             {
