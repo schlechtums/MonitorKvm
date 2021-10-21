@@ -3,7 +3,8 @@ name: Create Package
 on: push
 
 env:
-  SOLUTION_PATH: MonitorKvm.Service\MonitorKvm.Service.csproj
+  PROJECT_PATH: MonitorKvm.Service\MonitorKvm.Service.csproj
+  NIGHTLIGHT_PROJECT_FOLDER: MonitorKvm.EnsureWindowsNightMode
   PACKAGE_NAME_PREFIX: MonitorKVM
   PACKAGE_OUTPUT_FOLDER: package
 
@@ -44,10 +45,17 @@ jobs:
         uses: actions/setup-dotnet@v1
 
       - name: Nuget Restore
-        run: nuget restore ${{ env.SOLUTION_PATH }}
+        run: nuget restore ${{ env.PROJECT_PATH }}
         
-      - name: Build Solution
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
+      - name: Build Project
+        run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
+
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Build EnsureWindowsNightMode.exe
+      - with:
+          arch: win64
+        run: |
+          cl /EHsc main.cpp /link /out:"${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\EnsureWindowsNightMode.exe"
 
       - name: Create Zip
         run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip"
@@ -77,10 +85,10 @@ jobs:
         uses: actions/setup-dotnet@v1
 
       - name: Nuget Restore
-        run: nuget restore ${{ env.SOLUTION_PATH }}
+        run: nuget restore ${{ env.PROJECT_PATH }}
 
-      - name: Build Solution
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64 -r linux-x64
+      - name: Build Project
+        run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64 -r linux-x64
 
       - name: Create Zip
         run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\linux-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_linux-x64_${{ needs.Create-Release.outputs.tag }}.zip"
@@ -111,10 +119,10 @@ jobs:
         uses: actions/setup-dotnet@v1
 
       - name: Nuget Restore
-        run: nuget restore ${{ env.SOLUTION_PATH }}
+        run: nuget restore ${{ env.PROJECT_PATH }}
 
-      - name: Build Solution
-        run: dotnet build ${{ env.SOLUTION_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
+      - name: Build Project
+        run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64 -r osx-x64
 
       - name: Create Zip
         run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\osx-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_osx-x64_${{ needs.Create-Release.outputs.tag }}.zip"
