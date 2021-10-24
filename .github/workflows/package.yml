@@ -50,8 +50,8 @@ jobs:
       - name: Build Project
         run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
 
-      - uses: ilammy/msvc-dev-cmd@v1
       - name: Build EnsureWindowsNightMode.exe
+      - uses: ilammy/msvc-dev-cmd@v1
       - with:
           arch: win64
         run: |
