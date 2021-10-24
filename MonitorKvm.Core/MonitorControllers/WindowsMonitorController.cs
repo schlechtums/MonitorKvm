@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Schlechtums.Core.Common.Extensions;
+using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +26,9 @@ namespace MonitorKvm.Core.MonitorControllers
             {
                 Thread.Sleep(1500);
                 mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
+
+                Thread.Sleep(10000);
+                ProcessExtensions.RunProcessInBackground("EnsureWindowsNightMode.exe", null, null, false);
             }).Start();
         }
     }
