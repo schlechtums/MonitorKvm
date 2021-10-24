@@ -27,9 +27,16 @@ namespace MonitorKvm.Core.MonitorControllers
                 Thread.Sleep(1500);
                 mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, UIntPtr.Zero);
 
-                Thread.Sleep(10000);
-                ProcessExtensions.RunProcessInBackground("EnsureWindowsNightMode.exe", null, null, false);
+                this.EnsureNightMode(10);
             }).Start();
+        }
+
+        private void EnsureNightMode(int delaySeconds)
+        {
+            Console.WriteLine($"Ensuring Night Mode in {delaySeconds} seconds...");
+            Thread.Sleep(delaySeconds * 1000);
+            Console.WriteLine("Ensuring Night Mode...");
+            Console.WriteLine(ProcessExtensions.RunProcessInBackgroundAndGetStandardOutput("EnsureWindowsNightMode.exe", null, null));
         }
     }
 }
