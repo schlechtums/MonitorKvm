@@ -56,7 +56,7 @@ jobs:
         run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
         
       - name: Build EnsureWindowsNightMode.exe
-        run: cl /EHsc main.cpp /link /out:"${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\EnsureWindowsNightMode.exe"
+        run: cd ${{ env.NIGHTLIGHT_PROJECT_FOLDER }} && cl /EHsc main.cpp /link /out:"${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\EnsureWindowsNightMode.exe"
         shell: cmd
 
       - name: Create Zip
