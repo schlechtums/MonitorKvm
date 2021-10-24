@@ -6,7 +6,7 @@ env:
   PROJECT_PATH: MonitorKvm.Service\MonitorKvm.Service.csproj
   NIGHTLIGHT_PROJECT_FOLDER: MonitorKvm.EnsureWindowsNightMode
   PACKAGE_NAME_PREFIX: MonitorKVM
-  PACKAGE_OUTPUT_FOLDER: package
+  PACKAGE_OUTPUT_FOLDER: ${{ env.GITHUB_WORKSPACE }}\package
 
 jobs:
   Create-Release:
