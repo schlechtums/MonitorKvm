@@ -45,8 +45,8 @@ jobs:
         uses: actions/setup-dotnet@v1
         
       - name: Setup CL command line
-      - uses: ilammy/msvc-dev-cmd@v1
-      - with:
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
           arch: win64
 
       - name: Nuget Restore
@@ -54,6 +54,10 @@ jobs:
 
       - name: Build Project
         run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
+        
+      - name: Build EnsureWindowsNightMode.exe
+        run: cl /EHsc main.cpp /link /out:"${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\EnsureWindowsNightMode.exe"
+        shell: cmd
 
       - name: Create Zip
         run: Compress-Archive -Path ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\* -DestinationPath "${{ env.PACKAGE_OUTPUT_FOLDER }}\${{ env.PACKAGE_NAME_PREFIX }}_win-x64_${{ needs.Create-Release.outputs.tag }}.zip"
