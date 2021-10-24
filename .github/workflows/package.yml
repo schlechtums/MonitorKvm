@@ -43,17 +43,19 @@ jobs:
 
       - name: Setup .NET Core @ Latest
         uses: actions/setup-dotnet@v1
+        
+      - name: Setup CL command line
+      - uses: ilammy/msvc-dev-cmd@v1
+      - with:
+          arch: win64
 
       - name: Nuget Restore
         run: nuget restore ${{ env.PROJECT_PATH }}
         
       - name: Build Project
         run: dotnet build ${{ env.PROJECT_PATH }} -restore:True -nologo -property:Configuration=Release /p:Version=${{ needs.Create-Release.outputs.tag }} -o ${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64 -r win-x64
-
+          
       - name: Build EnsureWindowsNightMode.exe
-      - uses: ilammy/msvc-dev-cmd@v1
-      - with:
-          arch: win64
         run: |
           cl /EHsc main.cpp /link /out:"${{ env.PACKAGE_OUTPUT_FOLDER }}\win-x64\EnsureWindowsNightMode.exe"
 
